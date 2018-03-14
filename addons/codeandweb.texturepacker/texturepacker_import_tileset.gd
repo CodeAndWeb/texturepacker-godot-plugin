@@ -64,7 +64,10 @@ func get_import_options(preset):
 
 func get_option_visibility(option, options):
 	return true
-	
+
+
+func get_import_order():
+	return 200
 
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var sheets = read_sprite_sheet(source_file)
