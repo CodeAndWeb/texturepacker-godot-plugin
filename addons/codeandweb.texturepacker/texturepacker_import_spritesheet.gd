@@ -74,11 +74,12 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	print("Importing sprite sheet from "+source_file);
 	
 	var sheets = read_sprite_sheet(source_file)
-	var sheetFolder = source_file.get_basename()+".sprites";
+	var sheetFolder = source_file.get_basename()+".sprites"
 	create_folder(sheetFolder)
 		
 	for sheet in sheets.textures:
-		var image = load_image(sheet.image, "ImageTexture", []);
+		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
+		var image = load_image(sheetFile, "ImageTexture", [])
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
 	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], Resource.new())

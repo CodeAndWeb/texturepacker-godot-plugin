@@ -29,7 +29,7 @@ func load_image(rel_path, source_path, options):
 
 	var ext = rel_path.get_extension().to_lower()
 	if ext != "png" and ext != "jpg":
-		print_error("Unsupported image format: %s. Use PNG or JPG instead." % [ext])
+		printerr("Unsupported image format: %s. Use PNG or JPG instead." % [ext])
 		return ERR_FILE_UNRECOGNIZED
 
 	var total_path = rel_path
@@ -39,7 +39,7 @@ func load_image(rel_path, source_path, options):
 
 	var dir = Directory.new()
 	if not dir.file_exists(total_path):
-		print_error("Image not found: %s" % [total_path])
+		printerr("Image not found: %s" % [total_path])
 		return ERR_FILE_NOT_FOUND
 
 	if not total_path.begins_with("res://"):

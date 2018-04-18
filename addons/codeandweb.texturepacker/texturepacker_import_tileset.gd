@@ -84,7 +84,8 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 	var usedIds = []
 	for sheet in sheets.textures:
-		var image = load_image(sheet.image, "ImageTexture", [])
+		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
+		var image = load_image(sheetFile, "ImageTexture", [])
 		r_gen_files.push_back(sheet.image)
 		create_tiles(tileSet, sheet, image, usedIds)
 	
