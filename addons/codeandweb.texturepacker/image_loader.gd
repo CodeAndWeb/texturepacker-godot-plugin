@@ -51,7 +51,7 @@ func load_image(rel_path, source_path, options):
 		image = ImageTexture.new()
 		image.load(total_path)
 	else:
-		image = ResourceLoader.load(total_path, "ImageTexture", true)
+		image = ResourceLoader.load(total_path, "ImageTexture")
 
 	if image != null:
 		image.set_flags(flags)
