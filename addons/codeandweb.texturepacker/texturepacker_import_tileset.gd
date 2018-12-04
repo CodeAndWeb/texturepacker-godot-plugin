@@ -55,7 +55,7 @@ func get_preset_count():
 
 func get_preset_name(preset):
 	match preset:
-		PRESET_DEFAULT: return "Default"
+		Preset.PRESET_DEFAULT: return "Default"
 
 
 func get_import_options(preset):
