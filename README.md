@@ -33,8 +33,8 @@ Important: Enable the plugin on the Project Settings.
 ## 1.0.5 (2020-06-16)
 
 * Fixed syntax to support Godot 3.2.2
-* Fixed memory leak
-* Support additional image formats: webp, pvr, tga
+* Fixed memory leak (thanks @2shady4u)
+* Support additional image formats: webp, pvr, tga (thanks @AntonSalazar)
 * Renamed **master** branch to **main**
 
 ## 1.0.4 (2018-12-11)
