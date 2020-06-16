@@ -98,7 +98,6 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 func prune_tileset(tileSet, usedIds):
 	usedIds.sort()
-	var id;
 	for id in tileSet.get_tiles_ids():
 		if !usedIds.has(id):
 			tileSet.remove_tile(id)
