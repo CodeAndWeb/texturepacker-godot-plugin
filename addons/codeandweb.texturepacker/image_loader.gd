@@ -28,8 +28,8 @@ func load_image(rel_path, source_path, options):
 	var embed = options.embed_internal_images if "embed_internal_images" in options else false
 
 	var ext = rel_path.get_extension().to_lower()
-	if ext != "png" and ext != "jpg":
-		printerr("Unsupported image format: %s. Use PNG or JPG instead." % [ext])
+	if not ext in ["png","jpg","webp","pvr","tga"]:
+		printerr("Unsupported image format: %s. Use PNG, JPG, WEBP, PVR or TGA instead." % [ext])
 		return ERR_FILE_UNRECOGNIZED
 
 	var total_path = rel_path
