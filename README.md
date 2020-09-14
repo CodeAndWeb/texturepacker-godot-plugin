@@ -30,6 +30,12 @@ Important: Enable the plugin on the Project Settings.
 
 # Release notes
 
+## 1.0.6
+
+* Consolidated both plugin files into a single plugin for sanity sake.
+* Added image flags to .tpsheet and .tpset.
+* Removed some excess code and added a bit more error checking.
+
 ## 1.0.5 (2020-06-16)
 
 * Fixed syntax to support Godot 3.2.2
