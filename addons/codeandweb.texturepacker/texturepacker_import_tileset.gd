@@ -25,7 +25,7 @@ extends EditorImportPlugin
 
 var imageLoader = preload("image_loader.gd").new()
 
-enum Preset { PRESET_DEFAULT }
+enum Preset { PRESET_DEFAULT, PRESET_PIXEL_ART }
 
 # const TiledMapReader = preload("tiled_map_reader.gd")
 
@@ -60,10 +60,16 @@ func get_preset_count():
 func get_preset_name(preset):
 	match preset:
 		Preset.PRESET_DEFAULT: return "Default"
+		Preset.PRESET_PIXEL_ART: return "Pixel Art"
 
 
 func get_import_options(preset):
-	return []
+	return [{
+			"name": "image_flags",
+			"default_value": 0 if preset == Preset.PRESET_PIXEL_ART else Texture.FLAGS_DEFAULT,
+			"property_hint": PROPERTY_HINT_FLAGS,
+			"hint_string": "Mipmaps,Repeat,Filter,Anisotropic,sRGB,Mirrored Repeat"
+		}]
 
 
 func get_option_visibility(option, options):
@@ -73,14 +79,14 @@ func get_option_visibility(option, options):
 func get_import_order():
 	return 200
 
+
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var sheets = read_sprite_sheet(source_file)
-	var sheetFolder = source_file.get_basename()+".sprites";
-	create_folder(sheetFolder)
 
 	var fileName = "%s.%s" % [source_file.get_basename(), "res"]
 
 	var tileSet
+
 	if File.new().file_exists(fileName):
 		tileSet = ResourceLoader.load(fileName, "TileSet")
 	else:
@@ -89,16 +95,15 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var usedIds = []
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
-		var image = load_image(sheetFile, "ImageTexture", [])
+		var image = load_image(sheetFile, "ImageTexture", options)
 		r_gen_files.push_back(sheet.image)
 		create_tiles(tileSet, sheet, image, usedIds)
-	
-	prune_tileset(tileSet, usedIds)	
+
+	prune_tileset(tileSet, usedIds)
 
 	r_gen_files.push_back(fileName)
-	ResourceSaver.save(fileName, tileSet)
+	return ResourceSaver.save(fileName, tileSet)
 
-	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], Resource.new())
 
 func prune_tileset(tileSet, usedIds):
 	usedIds.sort()
@@ -121,7 +126,7 @@ func create_tiles(tileSet, sheet, image, r_usedIds):
 
 func create_tile(tileSet, sprite, image):
 	var tileName = sprite.filename.get_basename()
-	
+
 	var id = tileSet.find_tile_by_name(tileName)
 	if id==-1:
 		id = tileSet.get_last_unused_tile_id()
@@ -136,7 +141,7 @@ func create_tile(tileSet, sprite, image):
 
 func save_resource(name, texture):
 	create_folder(name.get_base_dir())
-	
+
 	var status = ResourceSaver.save(name, texture)
 	if status != OK:
 		printerr("Failed to save resource "+name)
@@ -158,4 +163,4 @@ func read_sprite_sheet(fileName):
 
 func load_image(rel_path, source_path, options):
 	return imageLoader.load_image(rel_path, source_path, options)
-	
+

@@ -25,7 +25,7 @@ extends EditorImportPlugin
 
 var imageLoader = preload("image_loader.gd").new()
 
-enum Preset { PRESET_DEFAULT }
+enum Preset { PRESET_DEFAULT, PRESET_PIXEL_ART }
 
 # const TiledMapReader = preload("tiled_map_reader.gd")
 
@@ -60,10 +60,16 @@ func get_preset_count():
 func get_preset_name(preset):
 	match preset:
 		Preset.PRESET_DEFAULT: return "Default"
+		Preset.PRESET_PIXEL_ART: return "Pixel Art"
 
 
 func get_import_options(preset):
-	return []
+	return [{
+			"name": "image_flags",
+			"default_value": 0 if preset == Preset.PRESET_PIXEL_ART else Texture.FLAGS_DEFAULT,
+			"property_hint": PROPERTY_HINT_FLAGS,
+			"hint_string": "Mipmaps,Repeat,Filter,Anisotropic,sRGB,Mirrored Repeat"
+		}]
 
 
 func get_option_visibility(option, options):
@@ -76,19 +82,19 @@ func get_import_order():
 
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	print("Importing sprite sheet from "+source_file);
-	
+
 	var sheets = read_sprite_sheet(source_file)
 	var sheetFolder = source_file.get_basename()+".sprites"
 	create_folder(sheetFolder)
-		
+
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
-		var image = load_image(sheetFile, "ImageTexture", [])
+		var image = load_image(sheetFile, "ImageTexture", options)
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
 	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], Resource.new())
-	
-	
+
+
 func create_folder(folder):
 	var dir = Directory.new()
 	if !dir.dir_exists(folder):
@@ -115,7 +121,7 @@ func create_atlas_texture(sheetFolder, sprite, image, r_gen_files):
 
 func save_resource(name, texture):
 	create_folder(name.get_base_dir())
-	
+
 	var status = ResourceSaver.save(name, texture)
 	if status != OK:
 		printerr("Failed to save resource "+name)
@@ -137,4 +143,4 @@ func read_sprite_sheet(fileName):
 
 func load_image(rel_path, source_path, options):
 	return imageLoader.load_image(rel_path, source_path, options)
-	
+
