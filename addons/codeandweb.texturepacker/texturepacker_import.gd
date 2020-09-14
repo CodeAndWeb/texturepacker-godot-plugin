@@ -79,6 +79,7 @@ func get_import_order():
 
 
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
+	# Dict containing all sprite information
 	var sheets = read_sprite_sheet(source_file)
 
 	match (source_file.get_extension()):
@@ -94,8 +95,6 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 				for sheet in sheets.textures:
 					var sheetFile = source_file.get_base_dir()+"/"+sheet.image
 					var image = imageLoader.load_image(sheetFile, "ImageTexture", options)
-
-					print(sheetFile)
 
 					status = create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
@@ -118,14 +117,15 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 			else:
 				tileSet = TileSet.new()
 
-			var usedIds = []
+			var tiles = []
+
 			for sheet in sheets.textures:
 				var sheetFile = source_file.get_base_dir()+"/"+sheet.image
 				var image = imageLoader.load_image(sheetFile, "ImageTexture", options)
 				r_gen_files.push_back(sheet.image)
-				create_tiles(tileSet, sheet, image, usedIds)
+				create_tiles(tileSet, sheet, image, tiles)
 
-			prune_tileset(tileSet, usedIds)
+			prune_tileset(tileSet, tiles)
 
 			r_gen_files.push_back(fileName)
 
@@ -171,9 +171,9 @@ func create_atlas_texture(sheetFolder, sprite, image, r_gen_files):
 #### Spritesheet code end ####
 
 #### Tileset code start ####
-func create_tiles(tileSet, sheet, image, r_usedIds):
+func create_tiles(tileSet, sheet, image, tiles):
 	for sprite in sheet.sprites:
-		r_usedIds.push_back(create_tile(tileSet, sprite, image))
+		tiles.push_back(create_tile(tileSet, sprite, image))
 
 
 func create_tile(tileSet, sprite, image):
@@ -191,11 +191,11 @@ func create_tile(tileSet, sprite, image):
 	return id
 
 
-func prune_tileset(tileSet, usedIds):
-	usedIds.sort()
+func prune_tileset(tileSet, tiles):
+	tiles.sort()
 
 	for id in tileSet.get_tiles_ids():
-		if !usedIds.has(id):
+		if !tiles.has(id):
 			tileSet.remove_tile(id)
 #### Tileset code end ####
 
@@ -217,12 +217,13 @@ func read_sprite_sheet(fileName):
 
 
 func save_resource(name, texture):
-	create_folder(name.get_base_dir())
+	var status = create_folder(name.get_base_dir())
 
-	var status = ResourceSaver.save(name, texture)
+	if status == OK:
+		status = ResourceSaver.save(name, texture)
 
-	if status != OK:
-		printerr("Failed to save resource "+name)
+		if status != OK:
+			printerr("Failed to save resource "+name)
 
 	return status
 
