@@ -87,6 +87,7 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 			print("Importing sprite sheet from "+source_file);
 
 			var sheetFolder = source_file.get_basename()+".sprites"
+
 			if create_folder(sheetFolder) == OK:
 				var status
 
@@ -106,6 +107,8 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 			return # totally exit out of this
 		"tpset":
 			# Tileset
+			print("Importing tileset from "+source_file);
+
 			var fileName = "%s.%s" % [source_file.get_basename(), "res"]
 
 			var tileSet
@@ -139,6 +142,8 @@ func create_folder(folder):
 			printerr("Failed to create folder: " + folder)
 
 		return status
+
+	return OK # No need to create a new folder
 
 
 func create_atlas_textures(sheetFolder, sheet, image, r_gen_files):
