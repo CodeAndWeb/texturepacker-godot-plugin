@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-tool
+@tool
 extends EditorImportPlugin
 
-var imageLoader = preload("image_loader.gd").new()
+var imageLoader = preload("res://addons/codeandweb.texturepacker/image_loader.gd").new()
 
 enum Preset { PRESET_DEFAULT }
 
@@ -33,27 +33,27 @@ func _notification(what):
 	if what == NOTIFICATION_PREDELETE:
 		imageLoader.free()
 
-func get_importer_name():
+func _get_importer_name():
 	return "codeandweb.texturepacker_import_tileset"
 
 
-func get_visible_name():
+func _get_visible_name():
 	return "TileSet from TexturePacker"
 
 
-func get_recognized_extensions():
+func _get_recognized_extensions():
 	return ["tpset"]
 
 
-func get_save_extension():
+func _get_save_extension():
 	return "res"
 
 
-func get_resource_type():
+func _get_resource_type():
 	return "Resource"
 
 
-func get_preset_count():
+func _get_preset_count():
 	return Preset.size()
 
 
@@ -62,16 +62,19 @@ func get_preset_name(preset):
 		Preset.PRESET_DEFAULT: return "Default"
 
 
-func get_import_options(preset):
+func _get_import_options(path, preset_index):
 	return []
 
 
-func get_option_visibility(option, options):
+func _get_option_visibility(path, option_name, options):
 	return true
 
 
-func get_import_order():
+func _get_import_order():
 	return 200
+
+func _get_priority():
+	return 1.0
 
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var sheets = read_sprite_sheet(source_file)
@@ -96,9 +99,9 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	prune_tileset(tileSet, usedIds)	
 
 	r_gen_files.push_back(fileName)
-	ResourceSaver.save(fileName, tileSet)
+	ResourceSaver.save(tileSet, fileName)
 
-	return ResourceSaver.save("%s.%s" % [save_path, get_save_extension()], Resource.new())
+	return ResourceSaver.save(Resource.new(), "%s.%s" % [save_path, _get_save_extension()])
 
 func prune_tileset(tileSet, usedIds):
 	usedIds.sort()
@@ -137,7 +140,7 @@ func create_tile(tileSet, sprite, image):
 func save_resource(name, texture):
 	create_folder(name.get_base_dir())
 	
-	var status = ResourceSaver.save(name, texture)
+	var status = ResourceSaver.save(texture, name)
 	if status != OK:
 		printerr("Failed to save resource "+name)
 		return false
@@ -149,8 +152,8 @@ func read_sprite_sheet(fileName):
 	if file.open(fileName, file.READ) != OK:
 		printerr("Failed to load "+fileName)
 	var text = file.get_as_text()
-	var dict = JSON.parse(text).result
-	if !dict:
+	var dict = JSON.parse_string(text)
+	if dict == null:
 		printerr("Invalid json data in "+fileName)
 	file.close()
 	return dict

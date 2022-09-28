@@ -20,11 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-tool
+@tool
 extends Object
 
 func load_image(rel_path, source_path, options):
-	var flags = options.image_flags if "image_flags" in options else Texture.FLAGS_DEFAULT
 	var embed = options.embed_internal_images if "embed_internal_images" in options else false
 
 	var ext = rel_path.get_extension().to_lower()
@@ -33,8 +32,8 @@ func load_image(rel_path, source_path, options):
 		return ERR_FILE_UNRECOGNIZED
 
 	var total_path = rel_path
-	if rel_path.is_rel_path():
-		total_path = ProjectSettings.globalize_path(source_path.get_base_dir()).plus_file(rel_path)
+	if rel_path.is_relative_path():
+		total_path = ProjectSettings.globalize_path(source_path.get_base_dir()).path_join(rel_path)
 	total_path = ProjectSettings.localize_path(total_path)
 
 	var dir = Directory.new()
@@ -52,8 +51,5 @@ func load_image(rel_path, source_path, options):
 		image.load(total_path)
 	else:
 		image = ResourceLoader.load(total_path, "ImageTexture")
-
-	if image != null:
-		image.set_flags(flags)
 
 	return image
