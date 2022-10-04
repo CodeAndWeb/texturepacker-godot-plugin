@@ -3,7 +3,10 @@
 This is a plugin for [Godot Engine](https://godotengine.org) to import
 `TileSet`s and `AtlasTexture`s from the [TexturePacker](https://www.codeandweb.com/texturepacker)
 
-**Note: This is compatible only with Godot 3.0 or later.**
+**Note: This is compatible with Godot 3.x**
+
+The version compatible with **Godot 4.x** is available on the **main** branch.
+
 
 
 ## Installation
@@ -29,6 +32,11 @@ Important: Enable the plugin on the Project Settings.
 
 
 # Release notes
+
+## 4.0.0 (2022-10-04)
+
+* The plugin now works with Godot 4 (main branch)
+* The old version working with Godot 3 is now on the godot-3 (this) branch
 
 ## 1.0.5 (2020-06-16)
 
