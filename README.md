@@ -30,6 +30,11 @@ Important: Enable the plugin on the Project Settings.
 
 # Release notes
 
+## 4.0.0 (2022-10-04)
+
+* The plugin now works with Godot 4
+* The old version working with Godot 3 is now on the godot-3 branch
+
 ## 1.0.5 (2020-06-16)
 
 * Fixed syntax to support Godot 3.2.2
