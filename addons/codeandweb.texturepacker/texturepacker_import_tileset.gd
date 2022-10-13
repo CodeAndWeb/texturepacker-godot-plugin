@@ -76,7 +76,10 @@ func _get_import_order():
 func _get_priority():
 	return 1.0
 
-func import(source_file, save_path, options, r_platform_variants, r_gen_files):
+func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
+
+	print("Importing tile set from "+source_file)
+
 	var sheets = read_sprite_sheet(source_file)
 	var sheetFolder = source_file.get_basename()+".sprites";
 	create_folder(sheetFolder)
@@ -84,7 +87,7 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var fileName = "%s.%s" % [source_file.get_basename(), "res"]
 
 	var tileSet
-	if File.new().file_exists(fileName):
+	if FileAccess.file_exists(fileName):
 		tileSet = ResourceLoader.load(fileName, "TileSet")
 	else:
 		tileSet = TileSet.new()
@@ -111,7 +114,7 @@ func prune_tileset(tileSet, usedIds):
 
 
 func create_folder(folder):
-	var dir = Directory.new()
+	var dir := DirAccess.open("res://")
 	if !dir.dir_exists(folder):
 		if dir.make_dir_recursive(folder) != OK:
 			printerr("Failed to create folder: " + folder)
@@ -148,14 +151,13 @@ func save_resource(name, texture):
 
 
 func read_sprite_sheet(fileName):
-	var file = File.new()
-	if file.open(fileName, file.READ) != OK:
+	var file = FileAccess.open(fileName, FileAccess.READ)
+	if not file:
 		printerr("Failed to load "+fileName)
 	var text = file.get_as_text()
 	var dict = JSON.parse_string(text)
 	if dict == null:
 		printerr("Invalid json data in "+fileName)
-	file.close()
 	return dict
 
 

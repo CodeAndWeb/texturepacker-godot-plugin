@@ -36,8 +36,7 @@ func load_image(rel_path, source_path, options):
 		total_path = ProjectSettings.globalize_path(source_path.get_base_dir()).path_join(rel_path)
 	total_path = ProjectSettings.localize_path(total_path)
 
-	var dir = Directory.new()
-	if not dir.file_exists(total_path):
+	if not FileAccess.file_exists(total_path):
 		printerr("Image not found: %s" % [total_path])
 		return ERR_FILE_NOT_FOUND
 
