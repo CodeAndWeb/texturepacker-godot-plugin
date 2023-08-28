@@ -10,7 +10,7 @@ Use the version from the **godot-3** branch if your are using Godot 3.
 
 ## Installation
 
-Simply download it from [Godot Asset Library](https://godotengine.org/asset-library/asset/169)
+Simply download it from [Godot Asset Library](https://godotengine.org/asset-library/asset/1503)
 
 Alternatively, download or clone this repository and copy the contents of the
 `addons` folder to your own project's `addons` folder.
