@@ -30,6 +30,10 @@ Important: Enable the plugin on the Project Settings.
 1. Save your sprite sheets / tile maps in your project folder
 2. Watch Godot import it automatically.
 
+## Known issues
+
+- Godot engine logs error message after importing a tile set:
+  `core/os/file_access.cpp:626 - Condition "!f" is true. Continuing.`
 
 # Release notes
 
