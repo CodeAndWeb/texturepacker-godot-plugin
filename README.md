@@ -1,11 +1,11 @@
 # TexturePacker Importer
 
-This is a plugin for [Godot Engine](https://godotengine.org) to import
-`TileSet`s and `AtlasTexture`s from the [TexturePacker](https://www.codeandweb.com/texturepacker)
+This is a plugin for [Godot Engine](https://godotengine.org) to import sprite sheets
+generated with [TexturePacker](https://www.codeandweb.com/) as 
+Godot `AtlasTexture`.
 
-**Note: This is compatible with Godot 4.0 beta 2 and newer.**
-
-Use the version from the **godot-3** branch if your are usin g Godot 3.
+**Note:** This plugin version is compatible with Godot 4.0 and newer.
+Use the version from the **godot-3** branch if your are using Godot 3.
 
 
 ## Installation
@@ -19,7 +19,7 @@ Alternatively, download or clone this repository and copy the contents of the
 
 ## Features
 
-* Import sprite sheets as AtlasTextures / Sprite sheets
+* Import sprite sheets as AtlasTextures
 * Supports trimmed sprites (margin)
 * Supports MultiPack
 
@@ -32,19 +32,21 @@ Alternatively, download or clone this repository and copy the contents of the
 
 ## Known issues
 
-### Currently no TileSet support
-
-The importer does currently not work with TileSets. Godot 3 had an API where a tile could be retrieved by its name. This is no longer supported in Godot 4.
-
-An option might be to create a file containing the name -> ID resolution. With this, it would be possible to update tile coordinates in the atlas.
+- TileSet import no longer supported: Godot 3 had an API where a tile could be
+  retrieved by its name. This is no longer available in Godot 4.
 
 
 # Release notes
 
+### 4.1.0 (2023-08-28)
+
+* Fixed problem when sprite sheet was updated
+* Improved error handling
+* Removed TileSet importer code
+
 ## 4.0.1 (2022-10-13)
 
 * The plugin now works with Godot 4 beta 2
-
 
 ## 4.0.0 (2022-10-04)
 
