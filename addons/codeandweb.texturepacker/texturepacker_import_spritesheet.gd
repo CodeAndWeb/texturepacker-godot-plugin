@@ -79,7 +79,7 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 	var sheetFolder = source_file.get_basename()+".sprites"
 	create_folder(sheetFolder)
-		
+
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
 		var image = ResourceLoader.load(sheetFile, "ImageTexture")
@@ -90,8 +90,8 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
 	return ResourceSaver.save(Resource.new(), "%s.%s" % [save_path, _get_save_extension()])
-	
-	
+
+
 func create_folder(folder):
 	var dir := DirAccess.open("res://")
 	if !dir.dir_exists(folder):
@@ -109,7 +109,7 @@ func create_atlas_textures(sheetFolder, sheet, image, r_gen_files):
 func create_atlas_texture(sheetFolder, sprite, image, r_gen_files):
 	var name = sheetFolder+"/"+sprite.filename.get_basename()+".tres"
 	var texture
-	if FileAccess.file_exists(name):
+	if ResourceLoader.exists(name, "AtlasTexture"):
 		texture = ResourceLoader.load(name, "AtlasTexture")
 	else:
 		texture = AtlasTexture.new()
