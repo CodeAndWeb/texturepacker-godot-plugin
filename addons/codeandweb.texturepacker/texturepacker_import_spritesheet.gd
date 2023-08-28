@@ -51,7 +51,7 @@ func _get_preset_count():
 	return Preset.size()
 
 
-func get_preset_name(preset):
+func _get_preset_name(preset):
 	match preset:
 		Preset.PRESET_DEFAULT: return "Default"
 
