@@ -33,10 +33,10 @@ Important: Enable the plugin on the Project Settings.
 
 # Release notes
 
-## 4.0.0 (2022-10-04)
+## 3.5.0 (2023-08-28)
 
-* The plugin now works with Godot 4 (main branch)
-* The old version working with Godot 3 is now on the godot-3 (this) branch
+* Fixed problem when sprite sheet was updated
+* Improved error handling
 
 ## 1.0.5 (2020-06-16)
 

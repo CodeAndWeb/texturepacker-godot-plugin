@@ -23,15 +23,9 @@
 tool
 extends EditorImportPlugin
 
-var imageLoader = preload("image_loader.gd").new()
 
 enum Preset { PRESET_DEFAULT }
 
-# const TiledMapReader = preload("tiled_map_reader.gd")
-
-func _notification(what):
-	if what == NOTIFICATION_PREDELETE:
-		imageLoader.free()
 
 func get_importer_name():
 	return "codeandweb.texturepacker_import_tileset"
@@ -73,9 +67,15 @@ func get_option_visibility(option, options):
 func get_import_order():
 	return 200
 
+
 func import(source_file, save_path, options, r_platform_variants, r_gen_files):
+	print("Importing tile set from "+source_file);
+	
 	var sheets = read_sprite_sheet(source_file)
-	var sheetFolder = source_file.get_basename()+".sprites";
+	if not sheets:
+		return ERR_PARSE_ERROR
+
+	var sheetFolder = source_file.get_basename()+".sprites"
 	create_folder(sheetFolder)
 
 	var fileName = "%s.%s" % [source_file.get_basename(), "res"]
@@ -89,7 +89,11 @@ func import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var usedIds = []
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
-		var image = load_image(sheetFile, "ImageTexture", [])
+		var image = ResourceLoader.load(sheetFile, "ImageTexture")
+		if not image:
+			printerr("Failed to load image file: " + sheetFile)
+			return ERR_FILE_NOT_FOUND
+
 		r_gen_files.push_back(sheet.image)
 		create_tiles(tileSet, sheet, image, usedIds)
 	
@@ -148,6 +152,8 @@ func read_sprite_sheet(fileName):
 	var file = File.new()
 	if file.open(fileName, file.READ) != OK:
 		printerr("Failed to load "+fileName)
+		return null
+		
 	var text = file.get_as_text()
 	var dict = JSON.parse(text).result
 	if !dict:
@@ -155,7 +161,3 @@ func read_sprite_sheet(fileName):
 	file.close()
 	return dict
 
-
-func load_image(rel_path, source_path, options):
-	return imageLoader.load_image(rel_path, source_path, options)
-	
