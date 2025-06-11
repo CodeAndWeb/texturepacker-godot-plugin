@@ -89,6 +89,8 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
+	delete_no_longer_existing_sprite_files(sheetFolder, r_gen_files)
+	
 	# without this call Godot editor will not refresh its filesystem view
 	EditorInterface.get_resource_filesystem().scan_sources();
 
@@ -149,3 +151,43 @@ func read_sprite_sheet(fileName):
 
 	file.close()
 	return dict
+
+
+func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
+	var result := PackedStringArray()
+	var dir := DirAccess.open(folder_path)
+
+	# Get all files in this directory
+	var files = dir.get_files()
+	for file_name in files:
+		if file_name.ends_with(".tres"):
+			result.append(folder_path + "/" + file_name)
+
+	# Get all subdirectories and recurse
+	var subdirs = dir.get_directories()
+	for subdir_name in subdirs:
+		var subdir_path = folder_path + "/" + subdir_name
+		result.append_array(get_all_tres_files_recursive(subdir_path))
+
+	return result
+
+
+func delete_no_longer_existing_sprite_files(sheetFolder: String, generated_files: PackedStringArray) -> void:
+	# Convert generated_files to a Set for fast lookup
+	var generated_set := {}
+	for path in generated_files:
+		generated_set[path] = true
+
+	var dir := DirAccess.open(sheetFolder)
+	if dir == null:
+		printerr("Failed to open directory for deletion: " + sheetFolder)
+		return
+
+	var existing_files = get_all_tres_files_recursive(sheetFolder)
+	for file_path in existing_files:
+		if not generated_set.has(file_path):
+			var err = dir.remove(file_path)
+			if err != OK:
+				printerr("Failed to delete obsolete sprite: " + file_path)
+			else:
+				print("Deleted obsolete sprite: " + file_path)
