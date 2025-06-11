@@ -115,7 +115,7 @@ func create_atlas_texture(sheetFolder, sprite, image, r_gen_files):
 	var name = sheetFolder+"/"+sprite.filename.get_basename()+".tres"
 	var texture
 	if ResourceLoader.exists(name, "AtlasTexture"):
-		texture = ResourceLoader.load(name, "AtlasTexture")
+		texture = ResourceLoader.load(name, "AtlasTexture", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
 	else:
 		texture = AtlasTexture.new()
 
@@ -146,4 +146,6 @@ func read_sprite_sheet(fileName):
 	var dict = JSON.parse_string(text)
 	if dict == null:
 		printerr("Invalid json data in "+fileName)
+
+	file.close()
 	return dict
