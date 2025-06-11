@@ -89,6 +89,11 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
 
+	# without this call Godot editor will not refresh its filesystem view
+	EditorInterface.get_resource_filesystem().scan_sources();
+
+	# we have to save an empty resource in "save_path", otherwise an error is displayed,
+	# and Godot will reimport the spritesheet each time the editor is re-entered
 	return ResourceSaver.save(Resource.new(), "%s.%s" % [save_path, _get_save_extension()])
 
 
