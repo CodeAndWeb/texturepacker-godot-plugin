@@ -38,6 +38,11 @@ Alternatively, download or clone this repository and copy the contents of the
 
 # Release notes
 
+### 4.2.0 (2025-06-11)
+
+* Remove sprites no longer present on a sheet
+* Refresh Godot UI after import
+
 ### 4.1.0 (2023-08-28)
 
 * Fixed problem when sprite sheet was updated
