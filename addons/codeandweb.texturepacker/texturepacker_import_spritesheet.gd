@@ -87,8 +87,17 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 			printerr("Failed to load image file: " + sheetFile)
 			return ERR_FILE_NOT_FOUND
 
-		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
+		if sheet.has("normalMap"):
+			var normalFile = source_file.get_base_dir()+"/"+sheet.normalMap
+			var normalImage = ResourceLoader.load(normalFile, "ImageTexture")
+			if not normalImage:
+				printerr("Failed to load normal map file: " + normalFile)
+				return ERR_FILE_NOT_FOUND
 
+			image = create_canvas_texture(sheetFolder, sheet, image, normalImage, r_gen_files)
+
+		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
+			
 	delete_no_longer_existing_sprite_files(sheetFolder, r_gen_files)
 	
 	# without this call Godot editor will not refresh its filesystem view
@@ -104,6 +113,18 @@ func create_folder(folder):
 	if !dir.dir_exists(folder):
 		if dir.make_dir_recursive(folder) != OK:
 			printerr("Failed to create folder: " + folder)
+
+
+func create_canvas_texture(sheetFolder, sheet, diffuseTex, normalTex, r_gen_files):
+	var canvasTex = CanvasTexture.new()
+	canvasTex.diffuse_texture = diffuseTex
+	canvasTex.normal_texture = normalTex
+	var canvasTexFolder = sheetFolder+"/CanvasTexture"
+	var canvasTexResource = canvasTexFolder+"/"+sheet.image.get_basename()+".tres"
+	create_folder(canvasTexFolder)
+	ResourceSaver.save(canvasTex, canvasTexResource)
+	r_gen_files.push_back(canvasTexResource)
+	return canvasTex
 
 
 func create_atlas_textures(sheetFolder, sheet, image, r_gen_files):
