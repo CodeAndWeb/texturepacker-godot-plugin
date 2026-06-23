@@ -1,47 +1,61 @@
 # TexturePacker Importer
 
 This is a plugin for [Godot Engine](https://godotengine.org) to import sprite sheets
-generated with [TexturePacker](https://www.codeandweb.com/) as 
-Godot `AtlasTexture`.
+generated with [TexturePacker](https://www.codeandweb.com/texturepacker) as
+Godot `AtlasTexture` resources.
 
-**Note:** This plugin version is compatible with Godot 4.0 and newer.
-Use the version from the **godot-3** branch if your are using Godot 3.
+**Note:** This plugin version is compatible with Godot 4.3 and newer.
+Use the version from the **godot-3** branch if you are using Godot 3.
 
 
 ## Installation
 
-Simply download it from [Godot Asset Library](https://godotengine.org/asset-library/asset/1503)
+Download it from the [Godot Asset Store](https://store.godotengine.org/asset/codeandweb/texturepacker-importer).
 
 Alternatively, download or clone this repository and copy the contents of the
 `addons` folder to your own project's `addons` folder.
 
-**Important**: Enable the plugin on the Project Settings.
+**Important:** Enable the plugin in Project Settings → Plugins.
+
 
 ## Features
 
-* Import sprite sheets as AtlasTextures
+* Imports sprite sheets as native Godot `AtlasTexture` resources
 * Supports trimmed sprites (margin)
-* Supports MultiPack
-* Supports normal maps
+* Supports MultiPack — multiple atlases per `.tpsheet`
+* Supports normal maps — auto-generates a `CanvasTexture` pairing diffuse + normal for 2D dynamic lighting
+* Each sheet generates a `<name>.sprites/` folder, one `.tres` per sprite — drag-and-drop ready in the FileSystem dock
+* Removes stale sprite resources automatically when sprites disappear from the sheet
+* Atlas images go through Godot's standard texture import pipeline, so every compression format Godot supports (ASTC, ETC1/ETC2, DXT1/DXT5, Basis Universal) works out of the box
+
 
 ## Usage (once the plugin is enabled)
 
 1. Create a sprite sheet in TexturePacker
-2. Save the image and .tpsheet file in the godot asset folder
-3. Watch Godot import it automatically.
+2. Save the image and `.tpsheet` file into your Godot project's asset folder
+3. Godot picks them up automatically and imports each sprite as an `AtlasTexture`
 
 
 ## Known issues
 
-- TileSet import no longer supported: Godot 3 had an API where a tile could be
+- TileSet import is no longer supported: Godot 3 had an API where a tile could be
   retrieved by its name. This is no longer available in Godot 4.
 
 
 # Release notes
 
+### 4.7.0 (2026-06-23)
+
+* Compatibility with Godot 4.7 import pipeline
+* Register sheet images as import dependencies via `append_import_external_resource()`
+* Reload imported textures with `CACHE_MODE_REPLACE_DEEP` so fresh imports are picked up
+* Added fallback return in `_get_preset_name()` (required by Godot 4.7 parser)
+* Guard recursive sprite cleanup against missing directories
+* Clarified minimum supported Godot version as 4.3
+
 ### 4.3.0 (2025-12-08)
 
-* Support sprites with normal map (use CanvasTexture if normal map is present)
+* Support sprites with normal map (use `CanvasTexture` if normal map is present)
 
 ### 4.2.0 (2025-06-11)
 
