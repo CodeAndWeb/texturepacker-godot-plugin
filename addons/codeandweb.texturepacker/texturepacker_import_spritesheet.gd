@@ -54,6 +54,7 @@ func _get_preset_count():
 func _get_preset_name(preset):
 	match preset:
 		Preset.PRESET_DEFAULT: return "Default"
+	return ""
 
 
 func _get_import_options(path, preset_index):
@@ -82,14 +83,14 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
-		var image = ResourceLoader.load(sheetFile, "ImageTexture")
+		var image = load_imported_texture(sheetFile)
 		if not image:
 			printerr("Failed to load image file: " + sheetFile)
 			return ERR_FILE_NOT_FOUND
 
 		if sheet.has("normalMap"):
 			var normalFile = source_file.get_base_dir()+"/"+sheet.normalMap
-			var normalImage = ResourceLoader.load(normalFile, "ImageTexture")
+			var normalImage = load_imported_texture(normalFile)
 			if not normalImage:
 				printerr("Failed to load normal map file: " + normalFile)
 				return ERR_FILE_NOT_FOUND
@@ -106,6 +107,15 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	# we have to save an empty resource in "save_path", otherwise an error is displayed,
 	# and Godot will reimport the spritesheet each time the editor is re-entered
 	return ResourceSaver.save(Resource.new(), "%s.%s" % [save_path, _get_save_extension()])
+
+
+func load_imported_texture(path: String):
+	var err = append_import_external_resource(path)
+	if err != OK and err != ERR_FILE_ALREADY_IN_USE:
+		printerr("Failed to import texture file: " + path)
+		return null
+
+	return ResourceLoader.load(path, "ImageTexture", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
 
 
 func create_folder(folder):
@@ -177,6 +187,8 @@ func read_sprite_sheet(fileName):
 func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
 	var result := PackedStringArray()
 	var dir := DirAccess.open(folder_path)
+	if dir == null:
+		return result
 
 	# Get all files in this directory
 	var files = dir.get_files()
