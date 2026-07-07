@@ -44,6 +44,10 @@ Alternatively, download or clone this repository and copy the contents of the
 
 # Release notes
 
+### 4.7.1 (2026-07-07)
+
+* Minor repository cleanup
+
 ### 4.7.0 (2026-06-23)
 
 * Compatibility with Godot 4.7 import pipeline
