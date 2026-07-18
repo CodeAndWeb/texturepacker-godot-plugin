@@ -26,6 +26,10 @@ extends EditorImportPlugin
 
 enum Preset { PRESET_DEFAULT }
 
+const ANIMATION_FPS := 10
+const ANIMATION_FRAME_DURATION := 1.0 / ANIMATION_FPS
+const ANIMATION_LIBRARY_SUFFIX := ".animations.tres"
+
 
 func _get_importer_name():
 	return "codeandweb.texturepacker_import_spritesheet"
@@ -81,6 +85,7 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 	var sheetFolder = source_file.get_basename()+".sprites"
 	create_folder(sheetFolder)
 
+	var spriteFrames = {}
 	for sheet in sheets.textures:
 		var sheetFile = source_file.get_base_dir()+"/"+sheet.image
 		var image = load_imported_texture(sheetFile)
@@ -96,9 +101,16 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 				return ERR_FILE_NOT_FOUND
 
 			image = create_canvas_texture(sheetFolder, sheet, image, normalImage, r_gen_files)
+			if not image:
+				return ERR_CANT_CREATE
 
 		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
-			
+		register_sprite_frames(spriteFrames, sheet, image)
+
+	if not create_animation_library(source_file.get_basename() + ANIMATION_LIBRARY_SUFFIX,
+			sheets.get("animations", []), spriteFrames, r_gen_files):
+		return ERR_CANT_CREATE
+
 	delete_no_longer_existing_sprite_files(sheetFolder, r_gen_files)
 	
 	# without this call Godot editor will not refresh its filesystem view
@@ -131,8 +143,9 @@ func create_canvas_texture(sheetFolder, sheet, diffuseTex, normalTex, r_gen_file
 	canvasTex.normal_texture = normalTex
 	var canvasTexFolder = sheetFolder+"/CanvasTexture"
 	var canvasTexResource = canvasTexFolder+"/"+sheet.image.get_basename()+".tres"
-	create_folder(canvasTexFolder)
-	ResourceSaver.save(canvasTex, canvasTexResource)
+	if not save_resource(canvasTexResource, canvasTex):
+		return null
+	canvasTex.take_over_path(canvasTexResource)
 	r_gen_files.push_back(canvasTexResource)
 	return canvasTex
 
@@ -153,16 +166,94 @@ func create_atlas_texture(sheetFolder, sprite, image, r_gen_files):
 		texture = AtlasTexture.new()
 
 	texture.atlas = image
-	texture.region = Rect2(sprite.region.x, sprite.region.y, sprite.region.w, sprite.region.h)
-	texture.margin = Rect2(sprite.margin.x, sprite.margin.y, sprite.margin.w, sprite.margin.h)
+	texture.region = region_rect(sprite)
+	texture.margin = margin_rect(sprite)
 	r_gen_files.push_back(name)
 	return save_resource(name, texture)
 
 
-func save_resource(name, texture):
+func register_sprite_frames(spriteFrames, sheet, image):
+	for sprite in sheet.sprites:
+		spriteFrames[sprite.filename] = {
+			"texture": image,
+			"region": region_rect(sprite),
+			"margin": margin_rect(sprite)
+		}
+
+
+func region_rect(sprite):
+	return Rect2(sprite.region.x, sprite.region.y, sprite.region.w, sprite.region.h)
+
+
+func margin_rect(sprite):
+	return Rect2(sprite.margin.x, sprite.margin.y, sprite.margin.w, sprite.margin.h)
+
+
+func create_animation_library(libraryFile, animations, spriteFrames, r_gen_files):
+	if animations.is_empty():
+		return true
+
+	var previousLibrary = load_previous_animation_library(libraryFile)
+	var library = AnimationLibrary.new()
+	for animation in animations:
+		var settings = animation_settings_for(previousLibrary, animation.name)
+		var frames = animation.frames.map(func(frameName): return spriteFrames[frameName])
+		library.add_animation(animation.name, create_animation(frames, settings))
+
+	if not save_resource(libraryFile, library):
+		return false
+	library.take_over_path(libraryFile)
+	r_gen_files.push_back(libraryFile)
+	return true
+
+
+func load_previous_animation_library(libraryFile):
+	if not ResourceLoader.exists(libraryFile, "AnimationLibrary"):
+		return null
+	var library = ResourceLoader.load(libraryFile, "AnimationLibrary", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
+	return library if library is AnimationLibrary else null
+
+
+# keep loop mode and per-frame speed the user set on a previous import
+func animation_settings_for(previousLibrary, animationName):
+	var settings = {"loop_mode": Animation.LOOP_LINEAR, "frame_duration": ANIMATION_FRAME_DURATION}
+	if not previousLibrary or not previousLibrary.has_animation(animationName):
+		return settings
+
+	var previousAnimation = previousLibrary.get_animation(animationName)
+	settings.loop_mode = previousAnimation.loop_mode
+	var regionTrack = previousAnimation.find_track(".:texture:region", Animation.TYPE_VALUE)
+	if regionTrack == -1:
+		return settings
+
+	var previousFrameCount = previousAnimation.track_get_key_count(regionTrack)
+	if previousFrameCount > 0 and previousAnimation.length > 0:
+		settings.frame_duration = previousAnimation.length / previousFrameCount
+	return settings
+
+
+func create_animation(frames, settings):
+	var animation = Animation.new()
+	animation.loop_mode = settings.loop_mode
+	animation.length = frames.size() * settings.frame_duration
+	add_animation_track(animation, ".:texture:atlas", frames.map(func(frame): return frame.texture), settings.frame_duration)
+	add_animation_track(animation, ".:texture:region", frames.map(func(frame): return frame.region), settings.frame_duration)
+	add_animation_track(animation, ".:texture:margin", frames.map(func(frame): return frame.margin), settings.frame_duration)
+	return animation
+
+
+func add_animation_track(animation, trackPath, values, frameDuration):
+	var track = animation.add_track(Animation.TYPE_VALUE)
+	animation.track_set_path(track, trackPath)
+	animation.value_track_set_update_mode(track, Animation.UPDATE_DISCRETE)
+	for index in values.size():
+		animation.track_insert_key(track, index * frameDuration, values[index])
+
+
+func save_resource(name, resource):
 	create_folder(name.get_base_dir())
-	
-	var status = ResourceSaver.save(texture, name)
+
+	var status = ResourceSaver.save(resource, name)
 	if status != OK:
 		printerr("Failed to save resource "+name)
 		return false
