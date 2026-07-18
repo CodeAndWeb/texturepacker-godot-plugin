@@ -1,50 +1,54 @@
 # TexturePacker Importer
 
 This is a plugin for [Godot Engine](https://godotengine.org) to import sprite sheets
-generated with [TexturePacker](https://www.codeandweb.com/) as 
-Godot `AtlasTexture`.
+generated with [TexturePacker](https://www.codeandweb.com/texturepacker) as
+Godot `AtlasTexture` resources.
 
-**Note:** This plugin version is compatible with Godot 4.0 and newer.
-Use the version from the **godot-3** branch if your are using Godot 3.
+**Note:** This plugin version is compatible with Godot 4.3 and newer.
+Use the version from the **godot-3** branch if you are using Godot 3.
 
 
 ## Installation
 
-Simply download it from [Godot Asset Library](https://godotengine.org/asset-library/asset/1503)
+Download it from the [Godot Asset Store](https://store.godotengine.org/asset/codeandweb/texturepacker-importer).
 
 Alternatively, download or clone this repository and copy the contents of the
 `addons` folder to your own project's `addons` folder.
 
-**Important**: Enable the plugin on the Project Settings.
+**Important:** Enable the plugin in Project Settings → Plugins.
+
 
 ## Features
 
-* Import sprite sheets as AtlasTextures
+* Imports sprite sheets as native Godot `AtlasTexture` resources
 * Supports trimmed sprites (margin)
-* Supports MultiPack
-* Supports normal maps
-* Generates an AnimationLibrary for AnimationPlayer from the animations
-  detected by TexturePacker
+* Supports MultiPack — multiple atlases per `.tpsheet`
+* Supports normal maps — auto-generates a `CanvasTexture` pairing diffuse + normal for 2D dynamic lighting
+* Each sheet generates a `<name>.sprites/` folder, one `.tres` per sprite — drag-and-drop ready in the FileSystem dock
+* Removes stale sprite resources automatically when sprites disappear from the sheet
+* Atlas images go through Godot's standard texture import pipeline, so every compression format Godot supports (ASTC, ETC1/ETC2, DXT1/DXT5, Basis Universal) works out of the box
+* Generates an `AnimationLibrary` for AnimationPlayer from the animations detected by TexturePacker
+
 
 ## Usage (once the plugin is enabled)
 
 1. Create a sprite sheet in TexturePacker
-2. Save the image and .tpsheet file in the godot asset folder
-3. Watch Godot import it automatically.
+2. Save the image and `.tpsheet` file into your Godot project's asset folder
+3. Godot picks them up automatically and imports each sprite as an `AtlasTexture`
+
 
 ## Using the generated animations (AnimationPlayer + Sprite2D)
 
-Enable **Detect animations** in TexturePacker (8.2.0 or newer): sprites whose
+Enable **Auto-detect animations** in TexturePacker (8.2.0 or newer): sprites whose
 file names end in a frame number (e.g. `run-right/RunRight_0001.png` …
 `RunRight_0006.png`) are grouped into animation sequences and written to the
-.tpsheet. The importer
-saves one `AnimationLibrary` per sheet to `<sheet>.animations.tres`, containing
-one looping animation per sequence (10 fps), named after the sprite path
-(`Character-run-right-RunRight` — `/` is not allowed in Godot animation names).
-Each animation drives the `atlas`, `region` and `margin` of a single
-`AtlasTexture` — trimmed sprites play with the correct size and offset, without
-one texture resource per frame, and multipack sheets work since the atlas is
-keyframed too.
+.tpsheet. The importer saves one `AnimationLibrary` per sheet to
+`<sheet>.animations.tres`, containing one looping animation per sequence
+(10 fps), named after the sprite path (`Character-run-right-RunRight` — `/` is
+not allowed in Godot animation names). Each animation drives the `atlas`,
+`region` and `margin` of a single `AtlasTexture` — trimmed sprites play with
+the correct size and offset, without one texture resource per frame, and
+multipack sheets work since the atlas is keyframed too.
 
 To use it in your scene:
 
@@ -76,7 +80,7 @@ you don't need to touch the library at all:
 
 ## Known issues
 
-- TileSet import no longer supported: Godot 3 had an API where a tile could be
+- TileSet import is no longer supported: Godot 3 had an API where a tile could be
   retrieved by its name. This is no longer available in Godot 4.
 
 
@@ -86,7 +90,7 @@ you don't need to touch the library at all:
 
 * Generate an `AnimationLibrary` per sheet (`<sheet>.animations.tres`) from the
   animations exported by TexturePacker (requires TexturePacker 8.2.0 or newer
-  with **Detect animations** enabled)
+  with **Auto-detect animations** enabled)
 * Animations drive `atlas`, `region` and `margin` of a single `AtlasTexture`
   for AnimationPlayer + Sprite2D — trimmed sprites and multipack sheets work
 * Loop mode and speed changed in the Godot editor are preserved on reimport
@@ -109,7 +113,7 @@ you don't need to touch the library at all:
 
 ### 4.3.0 (2025-12-08)
 
-* Support sprites with normal map (use CanvasTexture if normal map is present)
+* Support sprites with normal map (use `CanvasTexture` if normal map is present)
 
 ### 4.2.0 (2025-06-11)
 
