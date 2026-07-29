@@ -26,9 +26,9 @@ extends EditorImportPlugin
 
 enum Preset { PRESET_DEFAULT }
 
-const ANIMATION_FPS := 10
-const ANIMATION_FRAME_DURATION := 1.0 / ANIMATION_FPS
 const ANIMATION_LIBRARY_SUFFIX := ".animations.tres"
+const AnimationLibraryBuilder := preload("animation_library_builder.gd")
+const SpriteSheetValidator := preload("sprite_sheet_validator.gd")
 
 
 func _get_importer_name():
@@ -113,11 +113,8 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 	delete_no_longer_existing_sprite_files(sheetFolder, r_gen_files)
 	
-	# without this call Godot editor will not refresh its filesystem view
 	EditorInterface.get_resource_filesystem().scan_sources();
 
-	# we have to save an empty resource in "save_path", otherwise an error is displayed,
-	# and Godot will reimport the spritesheet each time the editor is re-entered
 	return ResourceSaver.save(Resource.new(), "%s.%s" % [save_path, _get_save_extension()])
 
 
@@ -190,64 +187,25 @@ func margin_rect(sprite):
 
 
 func create_animation_library(libraryFile, animations, spriteFrames, r_gen_files):
-	if animations.is_empty():
+	var importable = importable_animations(animations, spriteFrames)
+	if importable.is_empty():
 		return true
 
-	var previousLibrary = load_previous_animation_library(libraryFile)
-	var library = AnimationLibrary.new()
-	for animation in animations:
-		var settings = animation_settings_for(previousLibrary, animation.name)
-		var frames = animation.frames.map(func(frameName): return spriteFrames[frameName])
-		library.add_animation(animation.name, create_animation(frames, settings))
-
-	if not save_resource(libraryFile, library):
+	if not AnimationLibraryBuilder.new().build(libraryFile, importable, spriteFrames):
 		return false
-	library.take_over_path(libraryFile)
 	r_gen_files.push_back(libraryFile)
 	return true
 
 
-func load_previous_animation_library(libraryFile):
-	if not ResourceLoader.exists(libraryFile, "AnimationLibrary"):
-		return null
-	var library = ResourceLoader.load(libraryFile, "AnimationLibrary", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
-	return library if library is AnimationLibrary else null
-
-
-# keep loop mode and per-frame speed the user set on a previous import
-func animation_settings_for(previousLibrary, animationName):
-	var settings = {"loop_mode": Animation.LOOP_LINEAR, "frame_duration": ANIMATION_FRAME_DURATION}
-	if not previousLibrary or not previousLibrary.has_animation(animationName):
-		return settings
-
-	var previousAnimation = previousLibrary.get_animation(animationName)
-	settings.loop_mode = previousAnimation.loop_mode
-	var regionTrack = previousAnimation.find_track(".:texture:region", Animation.TYPE_VALUE)
-	if regionTrack == -1:
-		return settings
-
-	var previousFrameCount = previousAnimation.track_get_key_count(regionTrack)
-	if previousFrameCount > 0 and previousAnimation.length > 0:
-		settings.frame_duration = previousAnimation.length / previousFrameCount
-	return settings
-
-
-func create_animation(frames, settings):
-	var animation = Animation.new()
-	animation.loop_mode = settings.loop_mode
-	animation.length = frames.size() * settings.frame_duration
-	add_animation_track(animation, ".:texture:atlas", frames.map(func(frame): return frame.texture), settings.frame_duration)
-	add_animation_track(animation, ".:texture:region", frames.map(func(frame): return frame.region), settings.frame_duration)
-	add_animation_track(animation, ".:texture:margin", frames.map(func(frame): return frame.margin), settings.frame_duration)
-	return animation
-
-
-func add_animation_track(animation, trackPath, values, frameDuration):
-	var track = animation.add_track(Animation.TYPE_VALUE)
-	animation.track_set_path(track, trackPath)
-	animation.value_track_set_update_mode(track, Animation.UPDATE_DISCRETE)
-	for index in values.size():
-		animation.track_insert_key(track, index * frameDuration, values[index])
+func importable_animations(animations, spriteFrames):
+	var result = []
+	for animation in animations:
+		var missing = animation.frames.filter(func(frameName): return not spriteFrames.has(frameName))
+		if missing.is_empty():
+			result.append(animation)
+		else:
+			printerr("Skipping animation \"%s\": no sprite named \"%s\" in this sheet" % [animation.name, missing[0]])
+	return result
 
 
 func save_resource(name, resource):
@@ -265,14 +223,22 @@ func read_sprite_sheet(fileName):
 	if not file:
 		printerr("Failed to load "+fileName)
 		return null
-		
-	var text = file.get_as_text()
-	var dict = JSON.parse_string(text)
-	if dict == null:
-		printerr("Invalid json data in "+fileName)
 
+	var text = file.get_as_text()
 	file.close()
-	return dict
+
+	var sheet = JSON.parse_string(text)
+	if sheet == null:
+		printerr("Invalid json data in "+fileName)
+		return null
+
+	var validator = SpriteSheetValidator.new()
+	var formatError = validator.format_error(sheet)
+	if formatError != "":
+		printerr("%s: %s. %s" % [fileName, formatError, validator.exporter_hint(sheet)])
+		return null
+
+	return sheet
 
 
 func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
@@ -281,13 +247,11 @@ func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
 	if dir == null:
 		return result
 
-	# Get all files in this directory
 	var files = dir.get_files()
 	for file_name in files:
 		if file_name.ends_with(".tres"):
 			result.append(folder_path + "/" + file_name)
 
-	# Get all subdirectories and recurse
 	var subdirs = dir.get_directories()
 	for subdir_name in subdirs:
 		var subdir_path = folder_path + "/" + subdir_name
@@ -297,7 +261,6 @@ func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
 
 
 func delete_no_longer_existing_sprite_files(sheetFolder: String, generated_files: PackedStringArray) -> void:
-	# Convert generated_files to a Set for fast lookup
 	var generated_set := {}
 	for path in generated_files:
 		generated_set[path] = true
