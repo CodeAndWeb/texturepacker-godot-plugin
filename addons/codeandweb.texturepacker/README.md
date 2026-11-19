@@ -32,6 +32,7 @@ Alternatively, download or clone this repository and copy the contents of the
 * Each sheet generates a `<name>.sprites/` folder, one `.tres` per sprite — drag-and-drop ready in the FileSystem dock
 * Removes stale sprite resources automatically when sprites disappear from the sheet
 * Atlas images go through Godot's standard texture import pipeline, so every compression format Godot supports (ASTC, ETC1/ETC2, DXT1/DXT5, Basis Universal) works out of the box
+* Pre-compressed KTX, KTX2 and DDS sheets (e.g. BasisU UASTC, DXT5) are used as they are — Godot loads these files directly, without importing them
 * Generates an `AnimationLibrary` for AnimationPlayer from the animations detected by TexturePacker
 * Multi-sprite rigs can be hand-animated from the generated per-sprite resources — see [Animating several sprites in one AnimationPlayer](#animating-several-sprites-in-one-animationplayer)
 
@@ -188,6 +189,19 @@ character-rig sizes.
 
 
 # Release notes
+
+### 4.8.1 (2026-11-19)
+
+* Fixed: sheets with a `.ktx`, `.ktx2` or `.dds` image (including normal maps)
+  failed to import with "importer for type '' not found". Godot loads these
+  formats directly, so they are no longer queued for import
+* Fixed: a `.tpsheet` without sprites (an empty `textures` array, or textures
+  with empty `sprites`) is rejected instead of deleting all previously
+  generated sprites
+* Fixed: a sheet whose image is not a texture is rejected instead of saving
+  sprites without a texture
+* Verified against Godot 4.3, 4.7.2 and 4.8 beta 4. Godot 4.3 itself cannot read
+  RGBA8888 DDS files; they work in 4.7.2 and 4.8 beta 4
 
 ### 4.8.0 (2026-07-29)
 

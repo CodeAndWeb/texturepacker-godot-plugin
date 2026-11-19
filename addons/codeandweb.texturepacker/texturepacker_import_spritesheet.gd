@@ -27,6 +27,7 @@ extends EditorImportPlugin
 enum Preset { PRESET_DEFAULT }
 
 const ANIMATION_LIBRARY_SUFFIX := ".animations.tres"
+const NO_SPRITES_MESSAGE := "%s: contains no sprites, nothing imported. Previously generated sprites are kept. Add sprites to the sheet, or delete the sheet together with %s.sprites and %s."
 const AnimationLibraryBuilder := preload("animation_library_builder.gd")
 const SpriteSheetValidator := preload("sprite_sheet_validator.gd")
 
@@ -104,7 +105,8 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 			if not image:
 				return ERR_CANT_CREATE
 
-		create_atlas_textures(sheetFolder, sheet, image, r_gen_files)
+		if not create_atlas_textures(sheetFolder, sheet, image, r_gen_files):
+			return ERR_CANT_CREATE
 		register_sprite_frames(spriteFrames, sheet, image)
 
 	if not create_animation_library(source_file.get_basename() + ANIMATION_LIBRARY_SUFFIX,
@@ -119,12 +121,22 @@ func _import(source_file, save_path, options, r_platform_variants, r_gen_files):
 
 
 func load_imported_texture(path: String):
-	var err = append_import_external_resource(path)
-	if err != OK and err != ERR_FILE_ALREADY_IN_USE:
-		printerr("Failed to import texture file: " + path)
-		return null
+	if not is_loaded_without_import(path):
+		var err = append_import_external_resource(path)
+		if err != OK and err != ERR_FILE_ALREADY_IN_USE:
+			printerr("Failed to import texture file: " + path)
+			return null
 
-	return ResourceLoader.load(path, "ImageTexture", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
+	var texture = ResourceLoader.load(path, "ImageTexture", ResourceLoader.CACHE_MODE_REPLACE_DEEP)
+	if texture != null and not texture is Texture2D:
+		printerr("%s is a %s, not a 2D texture: check its Import settings" % [path, texture.get_class()])
+		return null
+	return texture
+
+
+func is_loaded_without_import(path: String) -> bool:
+	var directlyLoadedExtensions = ResourceLoader.get_recognized_extensions_for_type("ImageTexture")
+	return path.get_extension().to_lower() in directlyLoadedExtensions
 
 
 func create_folder(folder):
@@ -232,13 +244,25 @@ func read_sprite_sheet(fileName):
 		printerr("Invalid json data in "+fileName)
 		return null
 
+	if not is_importable_sheet(fileName, sheet):
+		return null
+
+	return sheet
+
+
+func is_importable_sheet(fileName, sheet):
 	var validator = SpriteSheetValidator.new()
 	var formatError = validator.format_error(sheet)
 	if formatError != "":
 		printerr("%s: %s. %s" % [fileName, formatError, validator.exporter_hint(sheet)])
-		return null
+		return false
 
-	return sheet
+	if not validator.has_sprites(sheet):
+		var baseName = fileName.get_basename()
+		printerr(NO_SPRITES_MESSAGE % [fileName, baseName, baseName + ANIMATION_LIBRARY_SUFFIX])
+		return false
+
+	return true
 
 
 func get_all_tres_files_recursive(folder_path: String) -> PackedStringArray:
