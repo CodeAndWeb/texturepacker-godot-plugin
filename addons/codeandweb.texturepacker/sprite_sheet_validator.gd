@@ -33,6 +33,9 @@ func format_error(sheet):
 		return "is not a JSON object"
 	if not sheet.get("textures") is Array:
 		return "missing top-level \"textures\" array"
+	# an empty sheet would wipe all previously generated sprites in the cleanup pass
+	if sheet.textures.is_empty():
+		return "has an empty \"textures\" array"
 	for textureIndex in sheet.textures.size():
 		var textureError = texture_format_error(sheet.textures[textureIndex])
 		if textureError != "":
